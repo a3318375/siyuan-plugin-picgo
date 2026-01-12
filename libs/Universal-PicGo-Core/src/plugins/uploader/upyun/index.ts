@@ -113,8 +113,10 @@ const handle = async (ctx: IPicGo): Promise<IPicGo> => {
       }
       try {
         const path = upyunOptions.path || ""
-        const saveKey = `${path}${img.fileName}${upyunOptions.options}`
-
+        //const saveKey = `${path}${img.fileName}${upyunOptions.options}`
+        let saveKey = path ? path.replace(/\/+$/, '') + '/' + img.fileName : img.fileName
+        // 确保路径格式正确，如 "/images/1.png"
+        saveKey = saveKey.replace(/\/+/g, '/') // 合并多个斜杠
         const options = postOptions(upyunOptions, img.fileName, saveKey, image)
         const res: any = await ctx.request(options)
         console.log("Using upyun SDK for upload, res=>", res)
@@ -122,7 +124,10 @@ const handle = async (ctx: IPicGo): Promise<IPicGo> => {
         if (res) {
           delete img.base64Image
           delete img.buffer
-          img.imgUrl = `${upyunOptions.url}/${saveKey}`
+          //img.imgUrl = `${upyunOptions.url}/${saveKey}`
+          const baseUrl = upyunOptions.url?.replace(/\/+$/, '') // 去掉末尾斜杠
+          const fileUrl = `${baseUrl}/${saveKey}`
+          img.imgUrl = fileUrl + (upyunOptions.options || '')
         } else {
           throw new Error("Upload failed")
         }
